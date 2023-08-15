@@ -10,6 +10,7 @@ defmodule Hava.Application do
     children = [
       # Starts a worker by calling: Hava.Worker.start_link(arg)
       # {Hava.Worker, arg}
+      {Task.Supervisor, name: Hava.TaskSupervisor}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

@@ -22,7 +22,7 @@ defmodule Inspector do
 
     # calculating new extra receive difference and compensate
     (new_receive - new_send - (receive - send))
-    |> @usage_compensator.compensate()
+    |> @usage_compensator.compensate(@interval)
 
     Process.send_after(self(), :inspect, @interval)
     {:noreply, %{interface: interface, usage: new_usage}}
