@@ -4,9 +4,9 @@ defmodule UploaderTest do
   setup :verify_on_exit!
 
 
-  Mox.defmock(Hava.CmdWrapperMock, for: Hava.CmdWrapper)
-  Application.put_env(:hava, :cmd_wrapper, Hava.CmdWrapperMock)
-
+  # overwriting default mock for uploader
+  Application.put_env(:hava, :uploader, Hava.UploaderLibreSt)
+  
   test "get server list successfully" do
     Hava.CmdWrapperMock
     |> expect(:run, fn "librespeed-cli --list", _ -> {:ok, librespeed_list_normal()} end)

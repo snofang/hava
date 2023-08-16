@@ -2,9 +2,6 @@ defmodule CompensatorTest do
   use ExUnit.Case, async: true
   import Mox
   setup :verify_on_exit!
-
-  Mox.defmock(Hava.UploaderMock, for: Hava.Uploader)
-  Application.put_env(:hava, :uploader, Hava.UploaderMock)
   
   setup %{} do
     %{servers: 1..10 |> Enum.map(&to_string/1), speeds: 1..10}

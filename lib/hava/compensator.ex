@@ -10,6 +10,10 @@ defmodule Hava.Compensator do
   alias Hava.Uploader
   use GenServer
 
+  def start_link(_opts) do
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
+  end
+  
   def init(_init_args) do
     servers =
       Uploader.get_servers()
@@ -74,7 +78,7 @@ defmodule Hava.Compensator do
   tries to compensate extra given receive within given duration 
   """
   def compensate(receive, duration) do
-    GenServer.cast(__MODULE__, {receive, duration})
+    GenServer.cast(__MODULE__, {:compensate, receive, duration})
   end
 
   @spec pick_servers(
@@ -99,7 +103,7 @@ defmodule Hava.Compensator do
           servers: servers,
           server_index: Integer.mod(server_index + 1, length(servers))
         },
-        receive - current_server.speed * duration,
+        receive - (current_server.speed * duration),
         duration,
         [current_server.server_id | selected_server_ids]
       )
