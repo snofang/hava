@@ -12,8 +12,8 @@ config :hava, Compensator,
   enabled: false
 
 config :hava, :run_pick,
-  max_call_gap: 5_000,
-  max_call_duration: 5_000,
+  max_call_gap: 10_000,
+  max_call_duration: 10_000,
   min_send_ratio: 12
 
 config :hava, Uploader,

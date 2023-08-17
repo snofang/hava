@@ -1,7 +1,7 @@
 defmodule RunPickTest do
   alias Hava.Aux.RunPickItem
   alias Hava.Aux.RunPick
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   test "pick next test" do
     servers = [
@@ -14,7 +14,7 @@ defmodule RunPickTest do
 
     run_pick =
       servers
-      |> RunPick.new(500, 10_000)
+      |> RunPick.new(500 * 1024 * 1024, 10_000)
       |> RunPick.pick_next()
 
     assert run_pick.index == 1
@@ -46,23 +46,21 @@ defmodule RunPickTest do
       |> Enum.map(&%{server_id: to_string(&1), speed: 10})
 
     # normal call gap limit
-    put_env(:max_call_gap, 1_000)
-
     run_pick =
       servers
-      |> RunPick.new(500, 10_000)
-      |> RunPick.pick_on_max_call_gap()
+      |> RunPick.new(500 * 1024 * 1024, 10_000)
 
+    run_pick = %{run_pick | gap: 1_000}
+    run_pick = run_pick |> RunPick.pick_on_max_call_gap()
     assert run_pick.items |> length() == 10
 
     # on zero call, there will be no selection 
-    put_env(:max_call_gap, 0)
-
     run_pick =
       servers
-      |> RunPick.new(500, 10_000)
-      |> RunPick.pick_on_max_call_gap()
+      |> RunPick.new(500 * 1024 * 1024, 10_000)
 
+    run_pick = %{run_pick | gap: 0}
+    run_pick = run_pick |> RunPick.pick_on_max_call_gap()
     assert run_pick.items |> length() == 0
   end
 
@@ -73,14 +71,77 @@ defmodule RunPickTest do
 
     run_pick =
       servers
-      |> RunPick.new(500, 10_000)
+      |> RunPick.new(500 * 1024 * 1024, 10_000)
       |> RunPick.pick_on_send_required()
 
-    # required send in mega bit / (per server mega bit send)
+    # required send in bytes / (per server bytes send)
     assert run_pick.items |> length() ==
-             (run_pick.send_required * 8 /
-                (10 * get_env(:max_call_duration) / 1_000))
+             (run_pick.send_required /
+                (10 * get_env(:max_call_duration) / 1_000 * 1024 * 1024 / 8))
              |> trunc()
+  end
+
+  test "adjust duration test - adjusted input" do
+    put_env(:max_call_gap, 5_000)
+    put_env(:max_call_duration, 5_000)
+    put_env(:min_send_ratio, 12)
+    # the followings yields 6.5 mega byte per seconds
+    # (10+15+13+14)/8 = 6.5
+    servers = [
+      %{server_id: "1", speed: 10},
+      %{server_id: "2", speed: 15},
+      %{server_id: "3", speed: 13},
+      %{server_id: "4", speed: 14}
+    ]
+
+    receive =
+      ((10 + 15 + 13 + 14) / 8 * get_env(:max_call_duration) * 1024 * 1024 / 1_000 /
+         get_env(:min_send_ratio))
+      |> round()
+
+    duration = 20_000
+
+    run_pick =
+      servers
+      |> RunPick.new(receive, duration)
+      |> RunPick.pick_on_max_call_gap()
+
+    assert run_pick.items |> length() == (duration / get_env(:max_call_gap)) |> round()
+    first_item = run_pick.items |> List.first()
+    assert first_item.duration == get_env(:max_call_duration)
+
+    # calling pick_on_send_required should have no effect on items
+    run_pick = run_pick |> RunPick.pick_on_send_required()
+    assert run_pick.items |> length() == 4
+
+    # calliing adjust time should have no efect also
+    run_pick = run_pick |> RunPick.adjust_pick_durations()
+    first_item = run_pick.items |> List.first()
+    assert first_item.duration == get_env(:max_call_duration)
+  end
+
+  test "run pick normalized test" do
+    put_env(:max_call_gap, 5_000)
+    put_env(:max_call_duration, 5_000)
+    put_env(:min_send_ratio, 12)
+    
+    # (10+15+13+14)/8 = 6.5
+    servers = [
+      %{server_id: "1", speed: 10},
+      %{server_id: "2", speed: 15},
+      %{server_id: "3", speed: 13},
+      %{server_id: "4", speed: 14}
+    ]
+
+    receive =
+      ((10 + 15 + 13 + 14) / 8 * (get_env(:max_call_duration) - 1_000) * 1024 * 1024 / 1_000 /
+         get_env(:min_send_ratio))
+      |> round()
+
+    run_pick = RunPick.pick_uniform(servers, receive, 20_000)
+    assert run_pick.items |> length() == 4
+    first_item = run_pick.items |> List.first()
+    assert first_item.duration == get_env(:max_call_duration) - 1_000
   end
 
   defp put_env(key, value) do

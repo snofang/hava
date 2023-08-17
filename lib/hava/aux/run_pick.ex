@@ -28,24 +28,12 @@ defmodule Hava.Aux.RunPick do
     }
   end
 
-  # def pick_uniform(servers, index, tx_amount, duration, picked_servers // []) do
-  #   
-  #   if duration <= 0 do
-  #     picked_servers
-  #   else
-  #     current_server = Enum.at(servers, server_index)
-  #
-  #     pick_servers(
-  #       %{
-  #         servers: servers,
-  #         server_index: Integer.mod(server_index + 1, length(servers))
-  #       },
-  #       receive - (current_server.speed * duration),
-  #       duration,
-  #       [current_server.server_id | selected_server_ids]
-  #     )
-  #   end
-  # end
+  def pick_uniform(servers, receive, duration) do
+    new(servers, receive, duration)
+    |> pick_on_max_call_gap()
+    |> pick_on_send_required()
+    |> adjust_pick_durations()
+  end
 
   def pick_next(%__MODULE__{} = run_pick) do
     server = Enum.at(run_pick.servers, run_pick.index)
@@ -94,12 +82,15 @@ defmodule Hava.Aux.RunPick do
   # in mega byte
   def send_amount(%__MODULE__{} = run_pick) do
     run_pick.items
-    |> Enum.reduce(0, fn item, acc -> item.speed * item.duration / 1_000 + acc end) 
-    |> trunc()
-    |> div(8)
+    |> Enum.reduce(0, fn item, acc -> item_byte_amount(item) + acc end)
   end
 
   def get_env(key), do: Application.get_env(:hava, :run_pick)[key]
+
+  # the amount of byte picked item is gonna send
+  @spec item_byte_amount(RunPickItem.t()) :: non_neg_integer()
+  defp item_byte_amount(%RunPickItem{} = item),
+    do: (item.speed * item.duration / 1_000 * 1024 * 1024 / 8) |> trunc()
 
   def pick_on_send_required(%__MODULE__{} = run_pick) do
     if(send_amount(run_pick) < run_pick.send_required) do
@@ -108,4 +99,52 @@ defmodule Hava.Aux.RunPick do
       run_pick
     end
   end
+
+  def adjust_pick_durations(%__MODULE__{} = run_pick) do
+    if(
+      send_amount(run_pick) |> byte_to_kilobyte() >
+        run_pick.send_required |> byte_to_kilobyte()
+    ) do
+      case decrease_duration(run_pick) do
+        {:ok, run_pick} -> adjust_pick_durations(run_pick)
+        {:error, _msg} -> run_pick
+      end
+    else
+      run_pick
+    end
+  end
+
+  defp item_duration_minimal(%RunPickItem{} = item), do: item.duration <= 1_000
+  defp byte_to_kilobyte(byte), do: (byte / 1024) |> round()
+  # decreases items durations by one second
+  defp decrease_duration(%__MODULE__{} = run_pick) do
+    if(run_pick.items |> List.first() |> item_duration_minimal()) do
+      {:error, "items duraitons are at the bottom"}
+    else
+      {:ok,
+       %{
+         run_pick
+         | items:
+             run_pick.items
+             |> Enum.map(fn item -> %{item | duration: item.duration - 1_000} end)
+       }}
+    end
+  end
+
+  # def get_max_send_item_index(%__MODULE__{} = run_pick) do
+  #   {fournd_index, _max_send, _next_index} =
+  #     run_pick.items
+  #     |> Enum.reduce(
+  #       {-1, Float.min_finite(), 0},
+  #       fn item, {found_index, max_send, index} ->
+  #         if(item.speed * item.duration > max_send) do
+  #           {index, item.speed * item.duration, index + 1}
+  #         else
+  #           {found_index, max_send, index + 1}
+  #         end
+  #       end
+  #     )
+  #
+  #   fournd_index
+  # end
 end
