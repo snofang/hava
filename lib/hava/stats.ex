@@ -5,7 +5,6 @@ defmodule Hava.Stats do
   """
   @callback read(binary()) :: %{receive: integer(), send: integer()}
 
-
   def read(interface), do: impl().read(interface)
   def impl, do: Application.get_env(:hava, :stats)
 end

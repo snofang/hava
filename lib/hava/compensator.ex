@@ -13,13 +13,13 @@ defmodule Hava.Compensator do
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
-  
+
   def init(_init_args) do
+    initial_speed = Application.get_env(:hava, Compensator)[:initial_speed]
+
     servers =
       Uploader.get_servers()
-      |> Enum.map(
-        &%{server_id: &1, speed: Application.get_env(:hava, Compensator)[:initial_speed]}
-      )
+      |> Enum.map(&%{server_id: &1, speed: initial_speed})
 
     {:ok, %{servers: servers, server_index: 0}}
   end
@@ -28,6 +28,7 @@ defmodule Hava.Compensator do
         {:compensate, receive, duration},
         %{servers: servers, server_index: server_index}
       ) do
+    IO.puts("--- handle_cast :compensate ---- receive: #{receive}\n ----- \n #{inspect servers}")
     ratio = Application.get_env(:hava, Compensator)[:ratio]
     session_duration = fetch_session_duration()
 
@@ -75,7 +76,8 @@ defmodule Hava.Compensator do
   end
 
   @doc """
-  tries to compensate extra given receive within given duration 
+  tries to compensate extra given `receive`(mega bit) within given `duration`(milliseconds) 
+  unit measures are in Mega bit 
   """
   def compensate(receive, duration) do
     GenServer.cast(__MODULE__, {:compensate, receive, duration})
@@ -98,6 +100,7 @@ defmodule Hava.Compensator do
     else
       current_server = Enum.at(servers, server_index)
 
+      IO.puts("receive: #{receive}, server: #{inspect(current_server)}, duration: #{duration}")
       pick_servers(
         %{
           servers: servers,
@@ -123,5 +126,9 @@ defmodule Hava.Compensator do
 
   defp fetch_session_duration() do
     Application.get_env(:hava, Compensator)[:session_duration]
+  end
+
+  def handle_call({:get_servers}, _from, state) do
+    {:reply, state.servers, state}
   end
 end

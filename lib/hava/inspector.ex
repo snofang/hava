@@ -1,9 +1,9 @@
 defmodule Hava.Inspector do
+  alias Hava.Compensator
   alias Hava.Stats
   use GenServer
 
   @interval Application.compile_env(:hava, [Inspector, :interval])
-  @usage_compensator Application.compile_env(:hava, [Inspector, :usage_compensator])
 
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)
@@ -22,7 +22,7 @@ defmodule Hava.Inspector do
 
     # calculating new extra receive difference and compensate
     (new_receive - new_send - (receive - send))
-    |> @usage_compensator.compensate(@interval)
+    |> Compensator.compensate(@interval)
 
     Process.send_after(self(), :inspect, @interval)
     {:noreply, %{interface: interface, usage: new_usage}}

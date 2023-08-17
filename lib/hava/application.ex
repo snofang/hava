@@ -2,6 +2,7 @@ defmodule Hava.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
+  alias Hava.Compensator
   require Config
 
   use Application
@@ -12,12 +13,15 @@ defmodule Hava.Application do
       [
         # Starts a worker by calling: Hava.Worker.start_link(arg)
         # {Hava.Worker, arg}
-        {Task.Supervisor, name: Hava.TaskSupervisor},
-        {Hava.Compensator, nil}
+        {Task.Supervisor, name: Hava.TaskSupervisor}
       ]
       |> append_if(
+        Application.get_env(:hava, Compensator)[:enabled],
+        {Hava.Compensator}
+      )
+      |> append_if(
         Application.get_env(:hava, Inspector)[:enabled],
-        {Hava.Inspector, nil}
+        {Hava.Inspector}
       )
       |> List.flatten()
 

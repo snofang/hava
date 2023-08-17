@@ -5,19 +5,16 @@ config :hava, Inspector,
   interval: 10_000,
   # net intefrace as the source of usage data
   usage_interface: "wlp3s0",
-  # net usage receive compensator
-  usage_compensator: Hava.Compensator,
   enabled: false
 
 config :hava, Compensator,
-  # compensation ratio
-  ratio: 12,
-  # initial server's speed in mega byte per second
   initial_speed: 10,
-  # the amount of each call to each server takes 
-  # this is directly related to inspector's interval and shouldn't
-  # be greater than it.
-  session_duratin: 5_000
+  enabled: false
+
+config :hava, :run_pick,
+  max_call_gap: 5_000,
+  max_call_duration: 5_000,
+  min_send_ratio: 12
 
 config :hava, Uploader,
   # enable/disable real upload

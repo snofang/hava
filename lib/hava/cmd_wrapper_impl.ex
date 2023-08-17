@@ -1,4 +1,5 @@
 defmodule Hava.CmdWrapperImpl do
+  require Logger
   alias Hava.CmdWrapper
   @behaviour CmdWrapper
 
