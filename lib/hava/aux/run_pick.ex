@@ -18,8 +18,9 @@ defmodule Hava.Aux.RunPick do
           items: list(RunPickItem.t())
         }
 
-  def new(servers, receive, duration) do
+  def new(servers, receive, duration, start_from_index \\ 0) do
     %__MODULE__{
+      index: start_from_index,
       servers: servers,
       receive: receive,
       duration: duration,
@@ -28,8 +29,8 @@ defmodule Hava.Aux.RunPick do
     }
   end
 
-  def pick_uniform(servers, receive, duration) do
-    new(servers, receive, duration)
+  def pick_uniform(servers, receive, duration, start_from_index \\ 0) do
+    new(servers, receive, duration, start_from_index)
     |> pick_on_max_call_gap()
     |> pick_on_send_required()
     |> adjust_pick_durations()
@@ -48,6 +49,7 @@ defmodule Hava.Aux.RunPick do
               [
                 %RunPickItem{
                   server_id: server.server_id,
+                  server_index: run_pick.index,
                   speed: server.speed,
                   duration: get_env(:max_call_duration)
                 }
@@ -94,7 +96,10 @@ defmodule Hava.Aux.RunPick do
     do: (item.speed * item.duration / 1_000 * 1024 * 1024 / 8) |> trunc()
 
   def pick_on_send_required(%__MODULE__{} = run_pick) do
-    if(send_amount(run_pick) < run_pick.send_required) do
+    if(
+      send_amount(run_pick) |> byte_to_kilobyte() <
+        run_pick.send_required |> byte_to_kilobyte()
+    ) do
       run_pick |> pick_next() |> pick_on_send_required()
     else
       run_pick

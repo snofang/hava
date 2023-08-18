@@ -23,3 +23,5 @@ Hava.StatsMock
   Logger.info("mock reading stats: no change")
   %{send: 0, receive: 0}
 end)
+
+ExUnit.configure(exclude: [time_consuming: true])

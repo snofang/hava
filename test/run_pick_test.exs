@@ -53,6 +53,14 @@ defmodule RunPickTest do
     run_pick = %{run_pick | gap: 1_000}
     run_pick = run_pick |> RunPick.pick_on_max_call_gap()
     assert run_pick.items |> length() == 10
+    # asserting index proper assignment 
+    assert Enum.to_list(0..9) == run_pick.items |> Enum.map(fn item -> item.server_index end)
+
+    # asserting id proper assignment 
+    assert Enum.to_list(1..10) ==
+             run_pick.items
+             |> Enum.map(fn item -> item.server_id |> Integer.parse() end)
+             |> Enum.map(fn {id, _} -> id end)
 
     # on zero call, there will be no selection 
     run_pick =
