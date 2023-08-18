@@ -10,6 +10,6 @@ defmodule CompensatorTest do
     start_supervised!(Hava.Compensator)
     Hava.Compensator.compensate(200 * 8, 10_000)
     :timer.sleep(1_000)
-    IO.inspect(Hava.UploaderMockServer.get_called_servers()) 
+    IO.inspect(Hava.UploaderMockServer.get_called_servers())
   end
 end

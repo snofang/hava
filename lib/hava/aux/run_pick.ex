@@ -33,6 +33,7 @@ defmodule Hava.Aux.RunPick do
     |> pick_on_max_call_gap()
     |> pick_on_send_required()
     |> adjust_pick_durations()
+    |> adjust_pick_after()
   end
 
   def pick_next(%__MODULE__{} = run_pick) do
@@ -129,6 +130,18 @@ defmodule Hava.Aux.RunPick do
              |> Enum.map(fn item -> %{item | duration: item.duration - 1_000} end)
        }}
     end
+  end
+
+  def adjust_pick_after(%__MODULE__{} = run_pick) do
+    pace = (run_pick.duration / (run_pick.items |> length())) |> round()
+
+    {_, items} =
+      run_pick.items
+      |> Enum.reduce({0, []}, fn item, {index, items} ->
+        {index + 1, [%{item | after: pace * index} | items]}
+      end)
+
+    %{run_pick | items: items |> Enum.reverse()}
   end
 
   # def get_max_send_item_index(%__MODULE__{} = run_pick) do

@@ -28,7 +28,7 @@ defmodule Hava.Compensator do
         {:compensate, receive, duration},
         %{servers: servers, server_index: server_index}
       ) do
-    IO.puts("--- handle_cast :compensate ---- receive: #{receive}\n ----- \n #{inspect servers}")
+    IO.puts("--- handle_cast :compensate ---- receive: #{receive}\n ----- \n #{inspect(servers)}")
     ratio = Application.get_env(:hava, Compensator)[:ratio]
     session_duration = fetch_session_duration()
 
@@ -101,12 +101,13 @@ defmodule Hava.Compensator do
       current_server = Enum.at(servers, server_index)
 
       IO.puts("receive: #{receive}, server: #{inspect(current_server)}, duration: #{duration}")
+
       pick_servers(
         %{
           servers: servers,
           server_index: Integer.mod(server_index + 1, length(servers))
         },
-        receive - (current_server.speed * duration),
+        receive - current_server.speed * duration,
         duration,
         [current_server.server_id | selected_server_ids]
       )
