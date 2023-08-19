@@ -33,6 +33,7 @@ defmodule Hava.MixProject do
   defp releases do
     [
       hava: [
+        steps: [:assemble, :tar],
         include_executables_for: [:unix],
         applications: [runtime_tools: :permanent]
       ]

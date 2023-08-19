@@ -14,7 +14,7 @@ defmodule Hava.UploaderMockServer do
         %{
           server_id: to_string(i),
           # TODO: to bring speed initialization logic into Uploader
-          speed: 0,#Application.get_env(:hava, Compensator)[:initial_speed],
+          speed: Application.get_env(:hava, Compensator)[:initial_speed],
           call_count: 0,
           call_time: nil
         }

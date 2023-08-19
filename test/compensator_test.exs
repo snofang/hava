@@ -38,20 +38,34 @@ defmodule CompensatorTest do
     assert DateTime.diff(called_server4.call_time, called_server3.call_time, :second) == 1
     # and so on ..
 
-    Hava.UploaderMockServer.clear_called_servers()
+    #
+    # on each run there should be new random speeds
+    #
     servers = Hava.UploaderMockServer.get_servers_internal()
     new_receive = calc_all_server_call_send_amount(servers, 1_000)
-    # on each run there should be new random speeds
     assert new_receive != receive
 
+    #
     # for double duration receive amount there should be double server calls
+    #
     receive = calc_all_server_call_send_amount(servers, 2_000)
+    Hava.UploaderMockServer.clear_called_servers()
     Hava.Compensator.compensate(receive, duration)
     IO.puts("waiting for more than #{duration} ")
     :timer.sleep(duration + 1_000)
 
     assert Hava.UploaderMockServer.get_called_servers()
            |> Enum.reduce(0, fn server, acc -> server.call_count + acc end) == server_count * 2
+
+
+    #
+    # for non positive receve values there should not be any sever call
+    #
+    Hava.UploaderMockServer.clear_called_servers()
+    Hava.Compensator.compensate(0, duration)
+    IO.puts("waiting for more than #{duration} ")
+    :timer.sleep(duration + 1_000)
+    assert Hava.UploaderMockServer.get_called_servers() |> Enum.count()  == 0
   end
 
   defp calc_all_server_call_send_amount(servers, duration_per_server) do

@@ -23,23 +23,33 @@ defmodule Hava.Compensator do
     servers =
       Uploader.get_servers()
       |> Enum.map(&%{server_id: &1, speed: initial_speed})
+
     {:ok, %{servers: servers, server_index: 0}}
   end
 
   def handle_cast(
         {:compensate, receive, duration},
-        %{servers: servers, server_index: server_index}
+        state = %{servers: servers, server_index: server_index}
       ) do
-    run_pick = RunPick.pick_uniform(servers, receive, duration, server_index)
-    for item <- run_pick.items do
-      Process.send_after(self(), {:run, item}, item.after)
-    end
+    Logger.info(
+      "----------- compensate request; receive: #{(receive / 1024 / 1024) |> Float.round(2)} MB, within: #{duration} ----------"
+    )
 
-    {:noreply,
-     %{
-       servers: servers,
-       server_index: run_pick.index
-     }}
+    if(receive > 0) do
+      run_pick = RunPick.pick_uniform(servers, receive, duration, server_index)
+
+      for item <- run_pick.items do
+        Process.send_after(self(), {:run, item}, item.after)
+      end
+
+      {:noreply,
+       %{
+         servers: servers,
+         server_index: run_pick.index
+       }}
+    else
+      {:noreply, state}
+    end
   end
 
   def handle_cast({:update_speed, server_index, speed}, state = %{servers: servers}) do
@@ -68,10 +78,6 @@ defmodule Hava.Compensator do
   unit measures are in Mega bit 
   """
   def compensate(receive, duration) do
-    Logger.info(
-      "----------- compensate request; receive: #{receive / 1024 / 1024 |> Float.round(2)} MB, within: #{duration} ----------"
-    )
-
     GenServer.cast(__MODULE__, {:compensate, receive, duration})
   end
 end
