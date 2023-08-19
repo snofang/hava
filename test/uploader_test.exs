@@ -34,7 +34,7 @@ defmodule UploaderTest do
       end
     )
 
-    assert Hava.Uploader.upload("51", 1) == 7.85
+    assert Hava.Uploader.upload("51", 1_000) == 7.85
   end
 
   test "upload failure" do
@@ -46,7 +46,7 @@ defmodule UploaderTest do
       end
     )
 
-    assert Hava.Uploader.upload("51", 1) == 0
+    assert Hava.Uploader.upload("51", 1_000) == 0
   end
 
   def librespeed_list_normal() do

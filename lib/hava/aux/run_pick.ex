@@ -56,17 +56,24 @@ defmodule Hava.Aux.RunPick do
               ]
       }
     else
-      pick_next(%{
+      if(exist_running_server(run_pick.servers)) do
+        pick_next(%{
+          run_pick
+          | index:
+              (run_pick.index + 1)
+              |> Integer.mod(
+                run_pick.servers
+                |> length()
+              )
+        })
+      else
         run_pick
-        | index:
-            (run_pick.index + 1)
-            |> Integer.mod(
-              run_pick.servers
-              |> length()
-            )
-      })
+      end
     end
   end
+
+  defp exist_running_server(servers),
+    do: servers |> Enum.find(fn server -> server.speed > 0 end)
 
   def pick_on_max_call_gap(%__MODULE__{} = run_pick) when run_pick.gap <= 0 do
     run_pick
@@ -75,7 +82,7 @@ defmodule Hava.Aux.RunPick do
   def pick_on_max_call_gap(%__MODULE__{} = run_pick) do
     count = (run_pick.duration / run_pick.gap) |> Float.ceil() |> trunc()
 
-    if(run_pick.items |> length() < count) do
+    if(run_pick.items |> length() < count && exist_running_server(run_pick.servers)) do
       run_pick |> pick_next() |> pick_on_max_call_gap()
     else
       run_pick
@@ -98,7 +105,8 @@ defmodule Hava.Aux.RunPick do
   def pick_on_send_required(%__MODULE__{} = run_pick) do
     if(
       send_amount(run_pick) |> byte_to_kilobyte() <
-        run_pick.send_required |> byte_to_kilobyte()
+        run_pick.send_required |> byte_to_kilobyte() &&
+        exist_running_server(run_pick.servers)
     ) do
       run_pick |> pick_next() |> pick_on_send_required()
     else
@@ -106,7 +114,7 @@ defmodule Hava.Aux.RunPick do
     end
   end
 
-  def adjust_pick_durations(%__MODULE__{} = run_pick) do
+  def adjust_pick_durations(%__MODULE__{} = run_pick) when run_pick.items |> length() > 0 do
     if(
       send_amount(run_pick) |> byte_to_kilobyte() >
         run_pick.send_required |> byte_to_kilobyte()
@@ -119,6 +127,8 @@ defmodule Hava.Aux.RunPick do
       run_pick
     end
   end
+
+  def adjust_pick_durations(%__MODULE__{} = run_pick), do: run_pick
 
   defp item_duration_minimal(%RunPickItem{} = item), do: item.duration <= 1_000
   defp byte_to_kilobyte(byte), do: (byte / 1024) |> round()
@@ -137,7 +147,7 @@ defmodule Hava.Aux.RunPick do
     end
   end
 
-  def adjust_pick_after(%__MODULE__{} = run_pick) do
+  def adjust_pick_after(%__MODULE__{} = run_pick) when run_pick.items |> length() > 0 do
     pace = (run_pick.duration / (run_pick.items |> length())) |> round()
 
     {_, items} =
@@ -149,6 +159,7 @@ defmodule Hava.Aux.RunPick do
     %{run_pick | items: items |> Enum.reverse()}
   end
 
+  def adjust_pick_after(%__MODULE__{} = run_pick), do: run_pick
   # def get_max_send_item_index(%__MODULE__{} = run_pick) do
   #   {fournd_index, _max_send, _next_index} =
   #     run_pick.items

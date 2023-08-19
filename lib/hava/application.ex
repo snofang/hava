@@ -2,7 +2,6 @@ defmodule Hava.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
-  alias Hava.Compensator
   require Config
 
   use Application
@@ -17,11 +16,11 @@ defmodule Hava.Application do
       ]
       |> append_if(
         Application.get_env(:hava, Compensator)[:enabled],
-        {Hava.Compensator}
+        {Hava.Compensator, []}
       )
       |> append_if(
         Application.get_env(:hava, Inspector)[:enabled],
-        {Hava.Inspector}
+        {Hava.Inspector, []}
       )
       |> List.flatten()
 

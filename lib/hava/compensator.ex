@@ -23,7 +23,6 @@ defmodule Hava.Compensator do
     servers =
       Uploader.get_servers()
       |> Enum.map(&%{server_id: &1, speed: initial_speed})
-
     {:ok, %{servers: servers, server_index: 0}}
   end
 
@@ -32,7 +31,6 @@ defmodule Hava.Compensator do
         %{servers: servers, server_index: server_index}
       ) do
     run_pick = RunPick.pick_uniform(servers, receive, duration, server_index)
-
     for item <- run_pick.items do
       Process.send_after(self(), {:run, item}, item.after)
     end
@@ -70,6 +68,10 @@ defmodule Hava.Compensator do
   unit measures are in Mega bit 
   """
   def compensate(receive, duration) do
+    Logger.info(
+      "----------- compensate request; receive: #{receive / 1024 / 1024 |> Float.round(2)} MB, within: #{duration} ----------"
+    )
+
     GenServer.cast(__MODULE__, {:compensate, receive, duration})
   end
 end

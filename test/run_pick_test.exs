@@ -168,6 +168,22 @@ defmodule RunPickTest do
              run_pick.items |> Enum.map(fn item -> item.after end)
   end
 
+  test "run pick normalized with all speed zero test" do
+    put_env(:max_call_gap, 5_000)
+    put_env(:max_call_duration, 5_000)
+    put_env(:min_send_ratio, 12)
+
+    servers = [
+      %{server_id: "1", speed: 0},
+      %{server_id: "2", speed: 0},
+      %{server_id: "3", speed: 0},
+      %{server_id: "4", speed: 0}
+    ]
+
+    run_pick = RunPick.pick_uniform(servers, 100*1024*1024, 20_000)
+    assert run_pick.items |> length() == 0
+  end
+  
   defp put_env(key, value) do
     Application.put_env(
       :hava,

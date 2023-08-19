@@ -10,10 +10,8 @@ defmodule Hava.StatsDev do
     tockens = Regex.run(~r/#{interface}:.*/, result) |> List.first() |> String.split()
 
     %{
-      receive: Enum.at(tockens, 1) |> Integer.parse() |> elem(0) |> to_mbit(),
-      send: Enum.at(tockens, 9) |> Integer.parse() |> elem(0) |> to_mbit()
+      receive: Enum.at(tockens, 1) |> Integer.parse() |> elem(0),
+      send: Enum.at(tockens, 9) |> Integer.parse() |> elem(0)
     }
   end
-
-  def to_mbit(bytes), do: (bytes / 1024 / 1024 * 8) |> trunc()
 end

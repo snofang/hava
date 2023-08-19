@@ -1,17 +1,10 @@
 import Config
 
-config :hava, Inspector,
-  # in milliseconds
-  interval: 100,
-  enabled: false
-
-config :hava, Compensator,
-  initial_speed: 10,
-  enabled: false
-
-config :hava, Uploader,
-  # enable/disable real upload
-  enabled: true
+config :hava, Inspector, enabled: false
+config :hava, Compensator, enabled: false
+# all the uploads in tests are mocked; in command level.
+# this is needed to reach the command level
+config :hava, Uploader, enabled: true
 
 # Print only warnings and errors during test
 config :logger, level: :warning

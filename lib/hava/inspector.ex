@@ -1,30 +1,38 @@
 defmodule Hava.Inspector do
+  require Logger
   alias Hava.Compensator
   alias Hava.Stats
   use GenServer
 
-  @interval Application.compile_env(:hava, [Inspector, :interval])
-
-  def start_link(_opts) do
-    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
+  def start_link(opts) do
+    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
   def init(_state) do
     interface = Application.get_env(:hava, Inspector)[:usage_interface]
+    interval = Application.get_env(:hava, Inspector)[:interval]
     usage = Stats.read(interface)
-    Process.send_after(self(), :inspect, @interval)
-    {:ok, %{interface: interface, usage: usage}}
+    Process.send_after(self(), :inspect, interval)
+    {:ok, %{interface: interface, interval: interval, usage: usage}}
   end
 
-  def handle_info(:inspect, %{interface: interface, usage: %{send: send, receive: receive}}) do
+  def handle_info(:inspect, %{
+        interface: interface,
+        interval: interval,
+        usage: %{send: send, receive: receive}
+      }) do
     # reading new usage stats
     new_usage = %{send: new_send, receive: new_receive} = Stats.read(interface)
 
     # calculating new extra receive difference and compensate
+    # Logger.debug("pre receive: #{receive |> byte_to_mega_byte()}, send: #{send |> byte_to_mega_byte()}")
+    # Logger.debug("new receive: #{new_receive |> byte_to_mega_byte()}, send: #{new_send |> byte_to_mega_byte()}")
     (new_receive - new_send - (receive - send))
-    |> Compensator.compensate(@interval)
+    |> Compensator.compensate(interval)
 
-    Process.send_after(self(), :inspect, @interval)
-    {:noreply, %{interface: interface, usage: new_usage}}
+    Process.send_after(self(), :inspect, interval)
+    {:noreply, %{interface: interface, interval: interval, usage: new_usage}}
   end
+  
+  # defp byte_to_mega_byte(bytes), do: bytes/1024/1024 |> Float.round(2)
 end

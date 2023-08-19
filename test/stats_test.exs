@@ -22,8 +22,8 @@ defmodule StatsTest do
     end)
 
     assert Hava.Stats.read("wlp3s0") == %{
-             send: (2_678_896_827 / 1024 / 1024 * 8) |> trunc(),
-             receive: (12_078_357_072 / 1024 / 1024 * 8) |> trunc()
+             send: 2_678_896_827,
+             receive: 12_078_357_072
            }
   end
 end

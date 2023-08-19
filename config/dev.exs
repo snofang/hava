@@ -1,11 +1,8 @@
 import Config
 
-config :hava, Inspector,
-  # in milliseconds
-  interval: 1_000,
-  enabled: false
-
+config :hava, Inspector, enabled: true
 config :hava, Compensator, enabled: true
+config :hava, Uploader, enabled: false
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
