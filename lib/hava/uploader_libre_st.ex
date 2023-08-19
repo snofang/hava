@@ -10,7 +10,7 @@ defmodule Hava.UploaderLibreSt do
   @spec get_servers() :: [binary]
   def get_servers() do
     {:ok, result} = CmdWrapper.run("librespeed-cli --list", @libre_call_timeout)
-    Logger.info("got following servers\n{inspect(result)}")
+    Logger.info("got following servers\n#{inspect(result)}")
 
     Regex.scan(~r/^(\d+):/m, result)
     |> Enum.map(&Enum.at(&1, 1))
