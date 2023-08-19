@@ -62,5 +62,6 @@ jobs:
         tags: false
         draft: false
         overwrite: true
+        default_release_name: Hava v0.1.0
     #     verbose: true
     #     default_release_name: hava-0.1.0-rc
