@@ -37,19 +37,26 @@ jobs:
     - name: Create release artifact
       run: MIX_ENV=prod mix release --overwrite
         
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: _build/prod/hava-0.1.0.tar.gz
+        name: Hava V0.1.0
+        body: Initial release to test and evaluate
     # - name: Release
     #   uses: fnkr/github-action-ghr@v1
     #   # if: startsWith(github.ref, 'refs/tags/')
     #   env:
     #     GHR_PATH: _build/prod/hava-0.1.0.tar.gz
     #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - uses: xresloader/upload-to-github-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        file: _build/prod/hava-0.1.0.tar.gz
-        tags: false
-        draft: false
-        overwrite: true
-        verbose: true
-        default_release_name: hava-0.1.0-rc
+    # - uses: xresloader/upload-to-github-release@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     file: _build/prod/hava-0.1.0.tar.gz
+    #     tags: false
+    #     draft: false
+    #     overwrite: true
+    #     verbose: true
+    #     default_release_name: hava-0.1.0-rc
