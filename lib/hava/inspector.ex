@@ -19,20 +19,20 @@ defmodule Hava.Inspector do
   def handle_info(:inspect, %{
         interface: interface,
         interval: interval,
-        usage: %{send: send, receive: receive}
+        usage: %{send: _send, receive: receive}
       }) do
     # reading new usage stats
-    new_usage = %{send: new_send, receive: new_receive} = Stats.read(interface)
+    new_usage = %{send: _new_send, receive: new_receive} = Stats.read(interface)
 
     # calculating new extra receive difference and compensate
     # Logger.debug("pre receive: #{receive |> byte_to_mega_byte()}, send: #{send |> byte_to_mega_byte()}")
     # Logger.debug("new receive: #{new_receive |> byte_to_mega_byte()}, send: #{new_send |> byte_to_mega_byte()}")
-    (new_receive - new_send - (receive - send))
+    (new_receive - receive)
     |> Compensator.compensate(interval)
 
     Process.send_after(self(), :inspect, interval)
     {:noreply, %{interface: interface, interval: interval, usage: new_usage}}
   end
-  
+
   # defp byte_to_mega_byte(bytes), do: bytes/1024/1024 |> Float.round(2)
 end
