@@ -8,7 +8,8 @@ config :hava, Inspector,
   enabled: true
 
 config :hava, Compensator,
-  initial_speed: 100,
+  initial_speed: 80,
+  recap_ratio: 1,
   enabled: true
 
 config :hava, :run_pick,

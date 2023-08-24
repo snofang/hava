@@ -31,9 +31,14 @@ defmodule Hava.Compensator do
         {:compensate, receive, duration},
         state = %{servers: servers, server_index: server_index}
       ) do
-    Logger.info(
-      "----------- compensate request; receive: #{(receive / 1024 / 1024) |> Float.round(2)} MB, within: #{duration} ----------"
-    )
+    Logger.info("""
+    ------- compensate request -------- 
+    Receive: #{(receive / 1024 / 1024) |> Float.round(2)} MB 
+    Duration: #{(duration / 1_000) |> trunc} 
+    Total servers: #{servers |> Enum.count()}
+    Active servers: #{servers |> Enum.filter(fn s -> s.speed > 0 end) |> Enum.count()}
+    -----------------------------------
+    """)
 
     if(receive > 0) do
       run_pick = RunPick.pick_uniform(servers, receive, duration, server_index)
@@ -58,7 +63,7 @@ defmodule Hava.Compensator do
        state
        | servers:
            List.update_at(servers, server_index, &%{&1 | speed: speed})
-           |> recap_zero_speed_servers(0.25)
+           |> recap_zero_speed_servers(Application.get_env(:hava, Compensator)[:recap_ratio])
      }}
   end
 
@@ -84,11 +89,16 @@ defmodule Hava.Compensator do
   count of them exceed `thershold_ratio`.
   """
   def recap_zero_speed_servers(servers, thershold_ratio)
-      when thershold_ratio >= 0 and thershold_ratio <= 1 do
+      when thershold_ratio >= 0 do
     zero_servers = servers |> Enum.filter(fn s -> s.speed <= 0 end)
     zero_ratio = ((zero_servers |> Enum.count()) / (servers |> Enum.count())) |> Float.round(2)
 
     if zero_ratio > thershold_ratio do
+      Logger.info("""
+      recapturing servers by ratio: #{thershold_ratio}, 
+      servers: #{inspect(zero_servers |> Enum.map(& &1.server_id))}
+      """)
+
       servers |> Enum.map(fn s -> if(s.speed == 0, do: %{s | speed: 1}, else: s) end)
     else
       servers

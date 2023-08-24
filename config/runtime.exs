@@ -10,7 +10,7 @@ if config_env() == :prod do
     usage_interface:
       System.get_env("HAVA_INTERFACE") ||
         raise("""
-        missing HAVA_NET_INTERFACE definition
+        missing HAVA_INTERFACE definition
         it should be specified which network interface 
         is going to be considered as a source of traffic inspection
         e.g. eth0, ens3, ...
@@ -28,5 +28,8 @@ if config_env() == :prod do
       (System.get_env("HAVA_MAX_CALL_DURATION") |> Integer.parse() |> elem(0)) * 1_000 || 10_000
 
   config :hava, :run_pick,
-    min_send_ratio: System.get_env("HAVA_RATIO") |> Integer.parse() |> elem(0) || 10
+    min_send_ratio: System.get_env("HAVA_SEND_RATIO") |> Integer.parse() |> elem(0) || 10
+
+  config :hava, Compensator,
+    recap_ratio: System.get_env("HAVA_RECAP_RATIO") |> Float.parse() |> elem(0) || 0.75
 end

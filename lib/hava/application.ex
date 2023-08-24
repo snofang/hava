@@ -2,6 +2,7 @@ defmodule Hava.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
+  require Logger
   require Config
 
   use Application
@@ -27,6 +28,20 @@ defmodule Hava.Application do
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Hava.Supervisor]
+
+    Logger.info(~s"""
+      
+    ---- HAVA (v#{Application.spec(:hava)[:vsn]}) Started ----
+    HAVA_INTERFACE=#{Application.get_env(:hava, Inspector)[:usage_interface]}
+    HAVA_INTERVAL=#{(Application.get_env(:hava, Inspector)[:interval] / 1_000) |> trunc()} (seconds)
+    HAVA_MAX_CALL_GAP=#{(Application.get_env(:hava, :run_pick)[:max_call_gap] / 1_000) |> trunc()} (seconds)
+    HAVA_MAX_CALL_DURATION=#{(Application.get_env(:hava, :run_pick)[:max_call_duration] / 1_000) |> trunc()} (seconds)
+    HAVA_SEND_RATIO=#{Application.get_env(:hava, :run_pick)[:min_send_ratio]}
+    HAVA_RECAP_RATIO=#{Application.get_env(:hava, Compensator)[:recap_ratio]}
+    ------------------------------------
+      
+    """)
+
     Supervisor.start_link(children, opts)
   end
 

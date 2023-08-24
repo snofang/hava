@@ -75,23 +75,43 @@ defmodule CompensatorTest do
       %{server_id: "4", speed: 10}
     ]
 
+    #
+    # dont recap for values less than ratio
+    #
     assert servers == servers |> Hava.Compensator.recap_zero_speed_servers(0.2)
     assert servers == servers |> Hava.Compensator.recap_zero_speed_servers(0)
 
-    servers = servers |> List.update_at(0, &(%{&1 | speed: 0}))
+    servers = servers |> List.update_at(0, &%{&1 | speed: 0})
     assert servers == servers |> Hava.Compensator.recap_zero_speed_servers(0.5)
 
-    servers = servers |> List.update_at(2, &(%{&1 | speed: 0}))
+    servers = servers |> List.update_at(2, &%{&1 | speed: 0})
     assert servers == servers |> Hava.Compensator.recap_zero_speed_servers(0.5)
-    
-    servers = servers |> List.update_at(3, &(%{&1 | speed: 0}))
+
+    #
+    # recap if the ratio reached
+    #
+    servers = servers |> List.update_at(3, &%{&1 | speed: 0})
+
     recaped_servers = [
       %{server_id: "1", speed: 1},
       %{server_id: "2", speed: 10},
       %{server_id: "3", speed: 1},
       %{server_id: "4", speed: 1}
     ]
+
     assert recaped_servers == servers |> Hava.Compensator.recap_zero_speed_servers(0.5)
+
+    #
+    # neve recap for ratio greater than 1
+    #
+    servers = [
+      %{server_id: "1", speed: 0},
+      %{server_id: "2", speed: 0},
+      %{server_id: "3", speed: 0},
+      %{server_id: "4", speed: 0}
+    ]
+
+    assert servers == servers |> Hava.Compensator.recap_zero_speed_servers(2)
   end
 
   defp calc_all_server_call_send_amount(servers, duration_per_server) do
