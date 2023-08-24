@@ -57,10 +57,8 @@ defmodule Hava.Compensator do
      %{
        state
        | servers:
-           List.replace_at(servers, server_index, %{
-             Enum.at(servers, server_index)
-             | speed: speed
-           })
+           List.update_at(servers, server_index, &%{&1 | speed: speed})
+           |> recap_zero_speed_servers(0.25)
      }}
   end
 
@@ -79,5 +77,25 @@ defmodule Hava.Compensator do
   """
   def compensate(receive, duration) do
     GenServer.cast(__MODULE__, {:compensate, receive, duration})
+  end
+
+  @doc """
+  assigns speed of 1 to those `servers` memeber with zero speed if
+  count of them exceed `thershold_ratio`.
+  """
+  def recap_zero_speed_servers(servers, thershold_ratio)
+      when thershold_ratio >= 0 and thershold_ratio <= 1 do
+    zero_servers = servers |> Enum.filter(fn s -> s.speed <= 0 end)
+    zero_ratio = ((zero_servers |> Enum.count()) / (servers |> Enum.count())) |> Float.round(2)
+
+    if zero_ratio > thershold_ratio do
+      servers |> Enum.map(fn s -> if(s.speed == 0, do: %{s | speed: 1}, else: s) end)
+    else
+      servers
+    end
+  end
+
+  def recap_zero_speed_servers([], _thershold_ratio) do
+    []
   end
 end

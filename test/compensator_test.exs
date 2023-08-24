@@ -67,6 +67,33 @@ defmodule CompensatorTest do
     assert Hava.UploaderMockServer.get_called_servers() |> Enum.count() == 0
   end
 
+  test "recap zero speed servers test" do
+    servers = [
+      %{server_id: "1", speed: 10},
+      %{server_id: "2", speed: 10},
+      %{server_id: "3", speed: 10},
+      %{server_id: "4", speed: 10}
+    ]
+
+    assert servers == servers |> Hava.Compensator.recap_zero_speed_servers(0.2)
+    assert servers == servers |> Hava.Compensator.recap_zero_speed_servers(0)
+
+    servers = servers |> List.update_at(0, &(%{&1 | speed: 0}))
+    assert servers == servers |> Hava.Compensator.recap_zero_speed_servers(0.5)
+
+    servers = servers |> List.update_at(2, &(%{&1 | speed: 0}))
+    assert servers == servers |> Hava.Compensator.recap_zero_speed_servers(0.5)
+    
+    servers = servers |> List.update_at(3, &(%{&1 | speed: 0}))
+    recaped_servers = [
+      %{server_id: "1", speed: 1},
+      %{server_id: "2", speed: 10},
+      %{server_id: "3", speed: 1},
+      %{server_id: "4", speed: 1}
+    ]
+    assert recaped_servers == servers |> Hava.Compensator.recap_zero_speed_servers(0.5)
+  end
+
   defp calc_all_server_call_send_amount(servers, duration_per_server) do
     servers
     |> Enum.reduce(0, fn server, acc ->
