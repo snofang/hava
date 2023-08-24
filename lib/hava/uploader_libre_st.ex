@@ -17,9 +17,8 @@ defmodule Hava.UploaderLibreSt do
   end
 
   def upload(server_id, duration) do
-
     cmd =
-      "librespeed-cli --no-download --simple --no-icmp --duration #{duration/1_000 |> round()} --server #{server_id}"
+      "librespeed-cli --no-download --simple --no-icmp --duration #{(duration / 1_000) |> round()} --server #{server_id}"
 
     Logger.info(cmd)
 

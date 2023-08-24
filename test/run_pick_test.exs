@@ -180,10 +180,10 @@ defmodule RunPickTest do
       %{server_id: "4", speed: 0}
     ]
 
-    run_pick = RunPick.pick_uniform(servers, 100*1024*1024, 20_000)
+    run_pick = RunPick.pick_uniform(servers, 100 * 1024 * 1024, 20_000)
     assert run_pick.items |> length() == 0
   end
-  
+
   defp put_env(key, value) do
     Application.put_env(
       :hava,

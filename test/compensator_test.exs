@@ -57,7 +57,6 @@ defmodule CompensatorTest do
     assert Hava.UploaderMockServer.get_called_servers()
            |> Enum.reduce(0, fn server, acc -> server.call_count + acc end) == server_count * 2
 
-
     #
     # for non positive receve values there should not be any sever call
     #
@@ -65,7 +64,7 @@ defmodule CompensatorTest do
     Hava.Compensator.compensate(0, duration)
     IO.puts("waiting for more than #{duration} ")
     :timer.sleep(duration + 1_000)
-    assert Hava.UploaderMockServer.get_called_servers() |> Enum.count()  == 0
+    assert Hava.UploaderMockServer.get_called_servers() |> Enum.count() == 0
   end
 
   defp calc_all_server_call_send_amount(servers, duration_per_server) do

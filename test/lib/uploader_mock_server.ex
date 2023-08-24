@@ -19,6 +19,7 @@ defmodule Hava.UploaderMockServer do
           call_time: nil
         }
       end)
+
     {:ok, %{servers: servers}}
   end
 
@@ -27,7 +28,7 @@ defmodule Hava.UploaderMockServer do
   end
 
   def handle_call({:upload, server_id}, _from, state = %{servers: servers}) do
-    speed = :rand.uniform() * (140 - 8) + 8 |> Float.round(2)
+    speed = (:rand.uniform() * (140 - 8) + 8) |> Float.round(2)
 
     servers =
       servers
@@ -67,7 +68,7 @@ defmodule Hava.UploaderMockServer do
     GenServer.call(__MODULE__, :get_servers)
     |> Enum.map(fn server -> server.server_id end)
   end
-  
+
   def get_servers_internal() do
     GenServer.call(__MODULE__, :get_servers)
   end

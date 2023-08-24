@@ -4,7 +4,7 @@ defmodule Hava.MixProject do
   def project do
     [
       app: :hava,
-      version: "0.1.4",
+      version: "0.1.5",
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -26,7 +26,8 @@ defmodule Hava.MixProject do
     [
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
-      {:mox, "~> 1.0.2", only: [:test]}
+      {:mox, "~> 1.0.2", only: [:test]},
+      {:epmdless, "~> 0.2.0"}
     ]
   end
 

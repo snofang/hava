@@ -8,7 +8,7 @@ config :hava, Inspector,
   enabled: true
 
 config :hava, Compensator,
-  initial_speed: 10,
+  initial_speed: 100,
   enabled: true
 
 config :hava, :run_pick,
