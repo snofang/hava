@@ -9,6 +9,9 @@ Application.put_env(:hava, :cmd_wrapper, Hava.CmdWrapperMock)
 Mox.defmock(Hava.UploaderMock, for: Hava.Uploader)
 Application.put_env(:hava, :uploader, Hava.UploaderMock)
 
+Mox.defmock(Hava.HttpClientMock, for: HTTPoison.Base)
+Application.put_env(:hava, :http_client, Hava.HttpClientMock)
+
 Hava.UploaderMock
 |> expect(:upload, fn server_id, duration ->
   Logger.info("mock uploading from server_id: #{server_id}, by duration: #{duration}")
@@ -24,4 +27,4 @@ Hava.StatsMock
   %{send: 0, receive: 0}
 end)
 
-ExUnit.configure(exclude: [time_consuming: true])
+ExUnit.configure(exclude: [time_consuming: true, skip: true])

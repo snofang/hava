@@ -24,6 +24,7 @@ config :hava, Uploader,
 config :hava, :cmd_wrapper, Hava.CmdWrapperImpl
 config :hava, :uploader, Hava.UploaderLibreSt
 config :hava, :stats, Hava.StatsDev
+config :hava, :http_client, HTTPoison
 
 # Configures Elixir's Logger
 config :logger, :console,
