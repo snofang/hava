@@ -128,7 +128,7 @@ defmodule RunPickTest do
     assert first_item.duration == get_env(:max_call_duration)
   end
 
-  test "run pick normalized test" do
+  test "run pick uniform test" do
     put_env(:max_call_gap, 5_000)
     put_env(:max_call_duration, 5_000)
     put_env(:min_send_ratio, 12)
@@ -146,12 +146,28 @@ defmodule RunPickTest do
          get_env(:min_send_ratio))
       |> round()
 
+    #
+    # keep_duration_busy = false
+    #
+    put_env(:keep_duration_busy, false)
     run_pick = RunPick.pick_uniform(servers, receive, 20_000)
     assert run_pick.items |> length() == 4
     first_item = run_pick.items |> List.first()
     assert first_item.duration == get_env(:max_call_duration) - 1_000
 
     assert [0, 5_000, 10_000, 15_000] = run_pick.items |> Enum.map(fn item -> item.after end)
+
+    #
+    # keep_duration_busy = true
+    #
+    put_env(:keep_duration_busy, true)
+    run_pick = RunPick.pick_uniform(servers, receive, 20_000)
+    assert run_pick.items |> length() == 4
+    first_item = run_pick.items |> List.first()
+    assert first_item.duration == get_env(:max_call_duration)
+
+    assert [0, 5_000, 10_000, 15_000] = run_pick.items |> Enum.map(fn item -> item.after end)
+
   end
 
   test "run pick adjust after test " do

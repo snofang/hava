@@ -34,8 +34,11 @@ defmodule Hava.Aux.RunPick do
     |> pick_on_max_call_gap()
     |> pick_on_send_required()
     |> adjust_pick_durations()
+    |> run_if(Application.get_env(:hava, :run_pick)[:keep_duration_busy], :keep_duration_busy)
     |> adjust_pick_after()
   end
+
+  defp run_if(data, condition, f), do: if(condition, do: apply(__MODULE__, f, [data]), else: data)
 
   def pick_next(%__MODULE__{} = run_pick) do
     server = Enum.at(run_pick.servers, run_pick.index)
@@ -129,6 +132,25 @@ defmodule Hava.Aux.RunPick do
   end
 
   def adjust_pick_durations(%__MODULE__{} = run_pick), do: run_pick
+
+  def keep_duration_busy(%__MODULE__{} = run_pick) when run_pick.items |> length() > 0 do
+    total_run_duration =
+      run_pick.items
+      |> Enum.reduce(0, fn item, acc -> item.duration + acc end)
+
+    if(run_pick.duration <= total_run_duration) do
+      run_pick
+    else
+      run_pick = %{
+        run_pick
+        | items: run_pick.items |> Enum.map(&%{&1 | duration: &1.duration + 1})
+      }
+
+      keep_duration_busy(run_pick)
+    end
+  end
+
+  def keep_duration_busy(%__MODULE__{} = run_pick), do: run_pick
 
   defp item_duration_minimal(%RunPickItem{} = item), do: item.duration <= 1_000
   defp byte_to_kilobyte(byte), do: (byte / 1024) |> round()

@@ -15,7 +15,8 @@ config :hava, Compensator,
 config :hava, :run_pick,
   max_call_gap: 10_000,
   max_call_duration: 10_000,
-  min_send_ratio: 10
+  min_send_ratio: 10,
+  keep_duration_busy: true
 
 config :hava, Uploader,
   # enable/disable real upload

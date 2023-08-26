@@ -2,9 +2,9 @@ import Config
 
 if config_env() == :prod do
   to_bool = fn s -> if(s == "true", do: true, else: false) end
-  config :hava, Inspector, enabled: to_bool.(System.get_env("HAVA_ENABLED") || true)
-  config :hava, Compensator, enabled: to_bool.(System.get_env("HAVA_ENABLED") || true)
-  config :hava, Uploader, enabled: to_bool.(System.get_env("HAVA_ENABLED") || true)
+  config :hava, Inspector, enabled: to_bool.(System.get_env("HAVA_ENABLED"))
+  config :hava, Compensator, enabled: to_bool.(System.get_env("HAVA_ENABLED"))
+  config :hava, Uploader, enabled: to_bool.(System.get_env("HAVA_ENABLED"))
 
   config :hava, Inspector,
     usage_interface:
@@ -29,6 +29,9 @@ if config_env() == :prod do
 
   config :hava, :run_pick,
     min_send_ratio: System.get_env("HAVA_SEND_RATIO") |> Integer.parse() |> elem(0) || 10
+
+  config :hava, :run_pick,
+    keep_duration_busy: to_bool.(System.get_env("HAVA_KEEP_DURATION_BUSY")) 
 
   config :hava, Compensator,
     recap_ratio: System.get_env("HAVA_RECAP_RATIO") |> Float.parse() |> elem(0) || 0.75
